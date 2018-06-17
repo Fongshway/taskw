@@ -16,7 +16,7 @@ TASK = {'description': "task 2 http://www.google.com/",
 
 class TestRecursibe(object):
     def setup(self):
-        if not TaskWarriorShellout.can_use():
+        if not TaskWarriorShellout.is_supported_version():
             # Sometimes the 'task' command line tool is not installed.
             raise nose.SkipTest("taskwarrior not installed")
 

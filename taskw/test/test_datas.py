@@ -6,7 +6,7 @@ import tempfile
 import datetime
 import dateutil.tz
 
-from taskw import TaskWarriorDirect, TaskWarriorShellout
+from taskw import TaskWarriorShellout
 
 
 TASK = {'description': "task 2 http://www.google.com/",
@@ -333,28 +333,12 @@ class _BaseTestDB(object):
         task = self.tw.get_task(description='foobar1')
 
 
-class TestDBDirect(_BaseTestDB):
-    class_to_test = TaskWarriorDirect
-
-    def test_delete_completed(self):
-        task = self.tw.task_add("foobar")
-        task = self.tw.task_done(uuid=task['uuid'])
-        self.tw.task_delete(uuid=task['uuid'])
-        tasks = self.tw.load_tasks()
-        eq_(len(tasks['pending']), 0)
-        eq_(len(tasks['completed']), 1)
-        #eq_(tasks['completed'][0]['status'], 'deleted')
-
-    def should_skip(self):
-        return False
-
-
 class TestDBShellout(_BaseTestDB):
     class_to_test = TaskWarriorShellout
 
     def should_skip(self):
         """ If 'task' is not installed, we can't run these tests. """
-        return not TaskWarriorShellout.can_use()
+        return not TaskWarriorShellout.is_supported_version()
 
     def test_filtering_simple(self):
         task1 = self.tw.task_add("foobar1")

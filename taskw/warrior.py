@@ -12,27 +12,22 @@ fall back to the older TaskWarriorDirect implementation.
 import abc
 import codecs
 import copy
-from distutils.version import LooseVersion
+import errno
+import json
 import logging
 import os
-import time
-import uuid
 import subprocess
-import json
-import errno
+from distutils.version import LooseVersion
 
 import kitchen.text.converters
-
 import six
 from six import with_metaclass
 from six.moves import filter
-from six.moves import map
 
 import taskw.utils
 from taskw.exceptions import TaskwarriorError
 from taskw.task import Task
 from taskw.taskrc import TaskRc
-
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +37,9 @@ open = lambda fname, mode: codecs.open(fname, mode, "utf-8")
 # Location of configuration file: either specified by TASKRC environment
 # variable, or ~/.taskrc (default).
 TASKRC = os.getenv("TASKRC", "~/.taskrc")
+
+# Minimum version of Taskwarrior supported
+SUPPORTED_VERSION = "2.5"
 
 
 class TaskWarriorBase(with_metaclass(abc.ABCMeta, object)):
@@ -187,219 +185,6 @@ class TaskWarriorBase(with_metaclass(abc.ABCMeta, object)):
         pass
 
 
-class TaskWarriorDirect(TaskWarriorBase):
-    """ Interacts with taskwarrior by directly manipulating the ~/.task/ db.
-
-    This is the deprecated implementation and will be phased out in
-    time due to taskwarrior's guidelines:  http://bit.ly/16I9VN4
-
-    See https://github.com/ralphbean/taskw/pull/15 for discussion
-    and https://github.com/ralphbean/taskw/issues/30 for more.
-    """
-
-    def sync(self):
-        raise NotImplementedError(
-            "You must use TaskWarriorShellout to use 'sync'"
-        )
-
-    def load_tasks(self, command='all'):
-        def _load_tasks(filename):
-            filename = os.path.join(self.config['data']['location'], filename)
-            filename = os.path.expanduser(filename)
-            with open(filename, 'r') as f:
-                lines = f.readlines()
-
-            return list(map(taskw.utils.decode_task, lines))
-
-        return dict(
-            (db, _load_tasks(DataFile.filename(db)))
-            for db in Command.files(command)
-        )
-
-    def get_task(self, **kw):
-        line, task = self._load_task(**kw)
-
-        id = None
-        # The ID going back only makes sense if the task is pending.
-        if Status.is_pending(task['status']):
-            id = line
-
-        return id, task
-
-    def _load_task(self, **kw):
-        valid_keys = set(['id', 'uuid', 'description'])
-        id_keys = valid_keys.intersection(kw.keys())
-
-        if len(id_keys) != 1:
-            raise KeyError("Only 1 ID keyword argument may be specified")
-
-        key = list(id_keys)[0]
-        if key not in valid_keys:
-            raise KeyError("Argument must be one of %r" % valid_keys)
-
-        line = None
-        task = dict()
-
-        # If the key is an id, assume the task is pending (completed tasks
-        # don't have IDs).
-        if key == 'id':
-            tasks = self.load_tasks(command=Status.PENDING)
-            line = kw[key]
-
-            if len(tasks[Status.PENDING]) >= line:
-                task = tasks[Status.PENDING][line - 1]
-
-        else:
-            # Search all tasks for the specified key.
-            tasks = self.load_tasks(command=Command.ALL)
-
-            matching = list(filter(
-                lambda t: t.get(key, None) == kw[key],
-                sum(tasks.values(), [])
-            ))
-
-            if matching:
-                task = matching[0]
-                line = tasks[Status.to_file(task['status'])].index(task) + 1
-
-        return line, task
-
-    def task_add(self, description, tags=None, **kw):
-        """ Add a new task.
-
-        Takes any of the keywords allowed by taskwarrior like proj or prior.
-        """
-
-        task = self._stub_task(description, tags, **kw)
-
-        task['status'] = Status.PENDING
-
-        # TODO -- check only valid keywords
-
-        if not 'entry' in task:
-            task['entry'] = str(int(time.time()))
-
-        if not 'uuid' in task:
-            task['uuid'] = str(uuid.uuid4())
-
-        id = self._task_add(task, Status.PENDING)
-        task['id'] = id
-        return task
-
-    def task_done(self, **kw):
-        """
-        Marks a pending task as done, optionally specifying a completion
-        date with the 'end' argument.
-        """
-        def validate(task):
-            if not Status.is_pending(task['status']):
-                raise ValueError("Task is not pending.")
-
-        return self._task_change_status(Status.COMPLETED, validate, **kw)
-
-    def task_update(self, task):
-        line, _task = self._load_task(uuid=task['uuid'])
-
-        if 'id' in task:
-            del task['id']
-
-        # Delete None values (treat them as deleting values)
-        # https://github.com/ralphbean/taskw/pull/70
-        items = list(task.items())  # listify generator for py3 support.
-        for k, v in items:
-            if v is None:
-                task.pop(k)
-                if k in _task:
-                    _task.pop(k)
-
-        _task.update(task)
-        self._task_replace(line, Status.to_file(task['status']), _task)
-        return line, _task
-
-    def task_delete(self, **kw):
-        """
-        Marks a task as deleted, optionally specifying a completion
-        date with the 'end' argument.
-        """
-        def validate(task):
-            if task['status'] == Status.DELETED:
-                raise ValueError("Task is already deleted.")
-
-        return self._task_change_status(Status.DELETED, validate, **kw)
-
-    def task_start(self, **kw):
-        """ Marks a task as started.  """
-        raise NotImplementedError()
-
-    def task_stop(self, **kw):
-        """ Marks a task as stopped.  """
-        raise NotImplementedError()
-
-    def filter_tasks(self, filter_dict):
-        raise NotImplementedError()
-
-    def _task_replace(self, id, category, task):
-        def modification(lines):
-            lines[id - 1] = taskw.utils.encode_task(task)
-            return lines
-
-        # FIXME write to undo.data
-        self._apply_modification(id, category, modification)
-
-    def _task_remove(self, id, category):
-        def modification(lines):
-            del lines[id - 1]
-            return lines
-
-        # FIXME write to undo.data
-        self._apply_modification(id, category, modification)
-
-    def _apply_modification(self, id, category, modification):
-        filename = DataFile.filename(category)
-        filename = os.path.join(self.config['data']['location'], filename)
-        filename = os.path.expanduser(filename)
-
-        with open(filename, "r") as f:
-            lines = f.readlines()
-
-        lines = modification(lines)
-
-        with open(filename, "w") as f:
-            f.writelines(lines)
-
-    def _task_add(self, task, category):
-        location = self.config['data']['location']
-        location = os.path.expanduser(location)
-        filename = category + '.data'
-
-        # Append the task
-        with open(os.path.join(location, filename), "a") as f:
-            f.writelines([taskw.utils.encode_task(task)])
-
-        # FIXME - this gets written when a task is completed.  incorrect.
-        # Add to undo.data
-        with open(os.path.join(location, 'undo.data'), "a") as f:
-            f.write("time %s\n" % str(int(time.time())))
-            f.write("new %s" % taskw.utils.encode_task(task))
-            f.write("---\n")
-
-        with open(os.path.join(location, filename), "r") as f:
-            # The 'id' of this latest added task.
-            return len(f.readlines())
-
-    def _task_change_status(self, status, validation, **kw):
-        line, task = self._load_task(**kw)
-        validation(task)
-        original_status = task['status']
-
-        task['status'] = status
-        task['end'] = kw.get('end') or str(int(time.time()))
-
-        self._task_add(task, Status.to_file(status))
-        self._task_remove(line, Status.to_file(original_status))
-        return task
-
-
 class TaskWarriorShellout(TaskWarriorBase):
     """ Interacts with taskwarrior by invoking shell commands.
 
@@ -429,9 +214,7 @@ class TaskWarriorShellout(TaskWarriorBase):
         self.config_overrides = config_overrides if config_overrides else {}
         self._marshal = marshal
         self.config = TaskRc(config_filename, overrides=config_overrides)
-
-        if self.get_version() >= LooseVersion('2.4'):
-            self.DEFAULT_CONFIG_OVERRIDES['verbose'] = 'new-uuid'
+        self.DEFAULT_CONFIG_OVERRIDES['verbose'] = 'new-uuid'
 
     def get_configuration_override_args(self):
         config_overrides = self.DEFAULT_CONFIG_OVERRIDES.copy()
@@ -536,11 +319,10 @@ class TaskWarriorShellout(TaskWarriorBase):
         return task
 
     @classmethod
-    def can_use(cls):
-        """ Returns true if runtime requirements of experimental mode are met
-        """
+    def is_supported_version(cls):
+        """ Returns true if minimum runtime requirements are met """
         try:
-            return cls.get_version() > LooseVersion('2')
+            return cls.get_version() >= LooseVersion(SUPPORTED_VERSION)
         except OSError:
             # OSError is raised if subprocess.Popen fails to find
             # the executable.
@@ -560,10 +342,6 @@ class TaskWarriorShellout(TaskWarriorBase):
         return LooseVersion(taskwarrior_version.decode())
 
     def sync(self, init=False):
-        if self.get_version() < LooseVersion('2.3'):
-            raise UnsupportedVersionException(
-                "'sync' requires version 2.3 of taskwarrior or later."
-            )
         if init is True:
             self._execute('sync', 'init')
         else:
@@ -668,11 +446,8 @@ class TaskWarriorShellout(TaskWarriorBase):
         # task and add them after we've added the task.
         annotations = self._extract_annotations_from_task(task)
 
-        # With older versions of taskwarrior, you can specify whatever uuid you
-        # want when adding a task.
-        if self.get_version() < LooseVersion('2.4'):
-            task['uuid'] = str(uuid.uuid4())
-        elif 'uuid' in task:
+        # Strip out argued uuid
+        if 'uuid' in task:
             del task['uuid']
 
         if self._marshal:
@@ -682,11 +457,10 @@ class TaskWarriorShellout(TaskWarriorBase):
 
         stdout, stderr = self._execute('add', *args)
 
-        # However, in 2.4 and later, you cannot specify whatever uuid you want
+        # In 2.4 and later, you cannot specify whatever uuid you want
         # when adding a task.  Instead, you have to specify rc.verbose=new-uuid
         # and then parse the assigned uuid out from stdout.
-        if self.get_version() >= LooseVersion('2.4'):
-            task['uuid'] = stdout.strip().split()[-1].strip('.')
+        task['uuid'] = stdout.strip().split()[-1].strip('.')
 
         id, added_task = self.get_task(uuid=task['uuid'])
 
@@ -903,7 +677,7 @@ class Status(object):
         }[status]
 
 
-class UnsupportedVersionException(object):
+class UnsupportedVersionException(Exception):
     pass
 
 
@@ -913,7 +687,9 @@ TaskWarriorExperimental = TaskWarriorShellout
 
 
 # Set a default based on what is available on the system.
-if TaskWarriorShellout.can_use():
+if TaskWarriorShellout.is_supported_version():
     TaskWarrior = TaskWarriorShellout
 else:
-    TaskWarrior = TaskWarriorDirect
+    raise UnsupportedVersionException(
+        "'taskw' requires version {} of taskwarrior or later.".format(SUPPORTED_VERSION)
+    )
