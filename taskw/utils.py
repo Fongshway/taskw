@@ -259,6 +259,7 @@ def convert_dict_to_override_args(config, prefix=''):
 
 CTRLCHAR = re.compile(b"[\x00-\x08\x0e-\x1f]")
 
+
 def clean_ctrl_chars(s):
     """ Clean string removing most (but not all) control characters """
     return CTRLCHAR.sub(b'', s)

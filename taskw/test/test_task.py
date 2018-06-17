@@ -16,8 +16,8 @@ class TestTaskDirtyability(TestCase):
             'uuid': str(uuid.uuid4()),
             'description': 'Something important',
             'due': (
-                datetime.datetime.now().replace(tzinfo=pytz.UTC)
-                + datetime.timedelta(hours=1)
+                datetime.datetime.now().replace(tzinfo=pytz.UTC) +
+                datetime.timedelta(hours=1)
             ).strftime('%Y%m%dT%H%M%SZ'),
             'tags': ['one', 'two', 'three'],
         })
@@ -91,8 +91,8 @@ class TestTaskMarshalling(TestCase):
             ]),
             'description': '&open;Something important',
             'due': (
-                datetime.datetime.now().replace(tzinfo=pytz.UTC)
-                + datetime.timedelta(hours=1)
+                datetime.datetime.now().replace(tzinfo=pytz.UTC) +
+                datetime.timedelta(hours=1)
             ).strftime('%Y%m%dT%H%M%SZ'),
             'tags': ['one', 'two', 'three'],
             'urgency': 10,
@@ -108,8 +108,8 @@ class TestTaskMarshalling(TestCase):
         arbitrary_depends_uuids = [uuid.uuid4(), uuid.uuid4()]
         arbitrary_description = '[one'
         arbitrary_due_date = (
-            datetime.datetime.now().replace(tzinfo=pytz.UTC)
-            + datetime.timedelta(hours=1)
+            datetime.datetime.now().replace(tzinfo=pytz.UTC) +
+            datetime.timedelta(hours=1)
         )
         arbitrary_tags = ['one', 'two', ]
         arbitrary_urgency = 10
@@ -145,8 +145,8 @@ class TestTaskMarshalling(TestCase):
             ]),
             'description': '&open;Something important',
             'due': (
-                datetime.datetime.now().replace(tzinfo=pytz.UTC)
-                + datetime.timedelta(hours=1)
+                datetime.datetime.now().replace(tzinfo=pytz.UTC) +
+                datetime.timedelta(hours=1)
             ).strftime('%Y%m%dT%H%M%SZ'),
             'tags': ['one', 'two', 'three'],
             'urgency': 10,

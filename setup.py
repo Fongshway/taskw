@@ -31,8 +31,7 @@ for category, filename in REQUIREMENTS_FILES.items():
         with open(requirements_path, 'r') as in_:
             requirements = [
                 req for req in in_.readlines()
-                if not req.startswith('-')
-                and not req.startswith('#')
+                if not req.startswith('-') and not req.startswith('#')
             ]
     REQUIREMENTS[category] = requirements
 
@@ -60,7 +59,7 @@ setup(name='taskw',
       include_package_data=True,
       zip_safe=False,
       install_requires=REQUIREMENTS['install'],
-      test_suite='nose.collector',
+      setup_requires=["pytest-runner"],
       tests_require=REQUIREMENTS['test'],
       entry_points="""
       # -*- Entry points: -*-

@@ -21,8 +21,7 @@ class ChoiceField(Field):
         if self._case_sensitive and value in self._choices:
             return True
         elif (
-            not self._case_sensitive
-            and value.upper() in [v.upper() for v in self._choices if v]
+            not self._case_sensitive and value.upper() in [v.upper() for v in self._choices if v]
         ):
             return True
         elif self._case_sensitive and value in self._choices:

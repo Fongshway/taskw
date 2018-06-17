@@ -310,10 +310,6 @@ class _BaseTestDB(object):
         self.tw.task_delete(uuid=task['uuid'])
         tasks = self.tw.load_tasks()
         eq_(len(tasks['pending']), 0)
-        # The shellout and direct methods behave differently here
-        #eq_(len(tasks['completed']), 1)
-        #ok_(not tasks['completed'][0]['end'] is None)
-        #eq_(tasks['completed'][0]['status'], 'deleted')
 
     @raises(ValueError)
     def test_delete_already_deleted(self):
@@ -401,7 +397,7 @@ class TestDBShellout(_BaseTestDB):
         task1 = self.tw.task_add("foobar1")
         task2 = self.tw.task_add("foo?bar")
         tasks = self.tw.filter_tasks({
-                'description.contains': 'oo?ba',
+            'description.contains': 'oo?ba',
         })
         eq_(len(tasks), 1)
         eq_(tasks[0]['id'], 2)
@@ -410,7 +406,7 @@ class TestDBShellout(_BaseTestDB):
         task1 = self.tw.task_add("foobar1")
         task2 = self.tw.task_add("foo?bar")
         tasks = self.tw.filter_tasks({
-                'description': 'foo?bar',
+            'description': 'foo?bar',
         })
         eq_(len(tasks), 1)
         eq_(tasks[0]['id'], 2)
@@ -444,17 +440,6 @@ class TestDBShellout(_BaseTestDB):
         })
         eq_(len(tasks), 1)
         eq_(tasks[0]['id'], 3)
-
-    #def test_filtering_double_dash(self):
-    #    task1 = self.tw.task_add("foobar1")
-    #    task2 = self.tw.task_add("foobar2")
-    #    task2 = self.tw.task_add("foo -- bar")
-    #    tasks = self.tw.filter_tasks({
-    #        'description.contains': 'foo -- bar',
-    #    })
-    #    eq_(len(tasks), 1)
-    #    eq_(tasks[0]['id'], 3)
-    #    eq_(tasks[0]['description'], 'foo -- bar')
 
     def test_filtering_logic_disjunction(self):
         task1 = self.tw.task_add("foobar1")

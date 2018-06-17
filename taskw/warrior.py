@@ -231,9 +231,9 @@ class TaskWarriorShellout(TaskWarriorBase):
             [
                 'task',
                 'rc:%s' % self.config_filename,
-            ]
-            + self.get_configuration_override_args()
-            + [six.text_type(arg) for arg in args]
+            ] +
+            self.get_configuration_override_args() +
+            [six.text_type(arg) for arg in args]
         )
 
         # subprocess is expecting bytestrings only, so nuke unicode if present
