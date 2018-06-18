@@ -1,8 +1,11 @@
+import codecs
 import os
+import re
 import uuid
 
 from setuptools import setup, find_packages
 
+here = os.path.abspath(os.path.dirname(__file__))
 f = open('README.rst')
 long_description = f.read().strip()
 long_description = long_description.split('split here', 1)[1]
@@ -20,6 +23,7 @@ for category, filename in REQUIREMENTS_FILES.items():
     )
     try:
         from pip.req import parse_requirements
+
         requirements = [
             str(req.req) for req in parse_requirements(
                 requirements_path,
@@ -35,8 +39,23 @@ for category, filename in REQUIREMENTS_FILES.items():
             ]
     REQUIREMENTS[category] = requirements
 
+
+def read(*parts):
+    # intentionally *not* adding an encoding option to open
+    return codecs.open(os.path.join(here, *parts), 'r').read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+
 setup(name='taskw',
-      version='1.2.0',
+      version=find_version('taskw', '__init__.py'),
       description="Python bindings for your taskwarrior database",
       long_description=long_description,
       classifiers=[
