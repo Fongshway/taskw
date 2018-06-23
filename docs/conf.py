@@ -6,26 +6,28 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-import os
-import sys
-
-import pkg_resources
-
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../..'))
+#
+import os
+import sys
+
+import pkg_resources
+
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'taskw'
-copyright = '2018, Author'
-author = 'Author'
+copyright = '2018, ralphbean'
+author = 'ralphbean'
 
 try:
+    # The full version, including alpha/beta/rc tags
     release = pkg_resources.get_distribution(project).version
 except pkg_resources.DistributionNotFound:
     print('To build the documentation, The distribution information of taskw')
@@ -38,7 +40,6 @@ del pkg_resources
 # The short X.Y version
 version = '.'.join(release.split('.')[:2])
 
-
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -50,8 +51,10 @@ version = '.'.join(release.split('.')[:2])
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.doctest',
     'sphinx.ext.todo',
+    'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -87,7 +90,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -142,7 +145,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'taskw.tex', 'taskw Documentation',
-     'Author', 'manual'),
+     'ralphbean', 'manual'),
 ]
 
 
@@ -166,27 +169,6 @@ texinfo_documents = [
      author, 'taskw', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-epub_author = author
-epub_publisher = author
-epub_copyright = copyright
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------

@@ -17,8 +17,8 @@ necessary.
 Build Status
 ------------
 .. image:: https://readthedocs.org/projects/taskw/badge/?version=latest
-:target: https://taskw.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
+   :target: https://taskw.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
 
 .. |master| image:: https://secure.travis-ci.org/Fongshway/taskw.png?branch=master
    :alt: Build Status - master branch

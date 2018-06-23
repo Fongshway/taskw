@@ -321,6 +321,13 @@ class TaskWarriorShellout(TaskWarriorBase):
     @classmethod
     def is_supported_version(cls):
         """ Returns true if minimum runtime requirements are met """
+
+        # Hack to get docs to build on https://readthedocs.org/projects/taskw/
+        # See https://docs.readthedocs.io/en/latest/faq.html#how-do-i-change-behavior-for-read-the-docs
+        on_rtd = os.environ.get('READTHEDOCS') == 'True'
+        if on_rtd:
+            return True
+
         try:
             return cls.get_version() >= LooseVersion(SUPPORTED_VERSION)
         except OSError:
@@ -336,7 +343,7 @@ class TaskWarriorShellout(TaskWarriorBase):
                 stdout=subprocess.PIPE
             ).communicate()[0]
         except OSError as e:
-            if 'No such file or directory' in e:
+            if 'No such file or directory' in str(e):
                 raise OSError("Unable to find the 'task' command-line tool.")
             raise
         return LooseVersion(taskwarrior_version.decode())

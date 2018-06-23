@@ -1,6 +1,17 @@
 taskw package
 =============
 
+Subpackages
+-----------
+
+.. toctree::
+
+    taskw.fields
+    taskw.test
+
+Submodules
+----------
+
 taskw.exceptions module
 -----------------------
 

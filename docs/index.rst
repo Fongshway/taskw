@@ -1,5 +1,5 @@
 .. taskw documentation master file, created by
-   sphinx-quickstart on Sun Jun 17 11:14:32 2018.
+   sphinx-quickstart on Sat Jun 23 11:54:37 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -10,8 +10,9 @@ Welcome to taskw's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   taskw
-   taskw.fields
+   readme
+   source/modules
+   changelog
 
 Indices and tables
 ==================
