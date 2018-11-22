@@ -1,4 +1,5 @@
 import numbers
+from decimal import Decimal
 
 from .base import Field
 
@@ -14,7 +15,10 @@ class NumericField(Field):
         if value is None:
             return value
         try:
-            return int(value)
+            if self.label == 'Estimate':
+                return round(Decimal(value), 6)
+            else:
+                return int(value)
         except ValueError:
             pass
         try:
