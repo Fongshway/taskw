@@ -1,7 +1,10 @@
+from datetime import datetime
+
 import six
 from dateutil.parser import parse
-from taskw.utils import DATE_FORMAT
+from dateutil.tz import tzutc
 
+from taskw.utils import DATE_FORMAT
 from .array import ArrayField
 from .base import DirtyableList
 
@@ -26,6 +29,10 @@ class Annotation(six.text_type):
         if self._entry:
             return parse(self._entry)
         return self._entry
+
+    @entry.setter
+    def entry(self, entry):
+        self._entry = entry
 
 
 class AnnotationArrayField(ArrayField):
@@ -56,16 +63,20 @@ class AnnotationArrayField(ArrayField):
 
         return super(AnnotationArrayField, self).deserialize(elements)
 
-    def serialize(self, value):
-        if not value:
-            value = []
+    def serialize(self, annotations):
+        if not annotations:
+            annotations = []
+
+        for annotation in annotations:
+            if not annotation.entry:
+                annotation.entry = datetime.now().replace(tzinfo=tzutc()).strftime(DATE_FORMAT)
+
         return super(AnnotationArrayField, self).serialize(
             [
                 {
-                    'entry': entry.entry.strftime(DATE_FORMAT),
-                    'description': six.text_type(entry)
-
-                } for entry in value
+                    'entry': annotation.entry.strftime(DATE_FORMAT),
+                    'description': six.text_type(annotation)
+                } for annotation in annotations
             ]
 
         )
