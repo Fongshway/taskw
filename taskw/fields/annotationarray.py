@@ -1,5 +1,6 @@
-from dateutil.parser import parse
 import six
+from dateutil.parser import parse
+from taskw.utils import DATE_FORMAT
 
 from .array import ArrayField
 from .base import DirtyableList
@@ -59,5 +60,12 @@ class AnnotationArrayField(ArrayField):
         if not value:
             value = []
         return super(AnnotationArrayField, self).serialize(
-            [six.text_type(entry) for entry in value]
+            [
+                {
+                    'entry': entry.entry.strftime(DATE_FORMAT),
+                    'description': six.text_type(entry)
+
+                } for entry in value
+            ]
+
         )
