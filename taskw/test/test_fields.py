@@ -25,14 +25,16 @@ class TestAnnotationArrayField(TestCase):
             Annotation("something", "20240101T010101Z"),
             Annotation("something else")
         ]
-
-        expected_serialized = ["something", "something else"]
         actual_serialized = self.field.serialize(value)
 
-        self.assertEqual(actual_serialized, expected_serialized)
-        for entry in actual_serialized:
+        self.assertEqual(actual_serialized[0]['description'], "something")
+        self.assertEqual(actual_serialized[0]['entry'], "20240101T010101Z")
+        self.assertEqual(actual_serialized[1]['description'], "something else")
+        self.assertIsNotNone(actual_serialized[1]['entry'])
+
+        for annotation in actual_serialized:
             self.assertTrue(
-                isinstance(entry, six.text_type)
+                isinstance(annotation['description'], six.text_type)
             )
 
     def test_deserialize_fully_formed_entries_to_stringey_things(self):
