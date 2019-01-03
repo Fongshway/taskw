@@ -17,13 +17,13 @@ necessary.
 Build Status
 ------------
 
-.. |master| image:: https://secure.travis-ci.org/ralphbean/taskw.png?branch=master
+.. |master| image:: https://secure.travis-ci.org/Fongshway/taskw.png?branch=master
    :alt: Build Status - master branch
-   :target: http://travis-ci.org/#!/ralphbean/taskw
+   :target: http://travis-ci.org/#!/Fongshway/taskw
 
-.. |develop| image:: https://secure.travis-ci.org/ralphbean/taskw.png?branch=develop
+.. |develop| image:: https://secure.travis-ci.org/Fongshway/taskw.png?branch=develop
    :alt: Build Status - develop branch
-   :target: http://travis-ci.org/#!/ralphbean/taskw
+   :target: http://travis-ci.org/#!/Fongshway/taskw
 
 +----------+-----------+
 | Branch   | Status    |
