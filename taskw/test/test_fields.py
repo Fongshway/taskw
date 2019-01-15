@@ -23,7 +23,8 @@ class TestAnnotationArrayField(TestCase):
     def test_serialize_annotations_into_strings(self):
         value = [
             Annotation("something", "20240101T010101Z"),
-            Annotation("something else")
+            Annotation("something else"),
+            'String Annotation',
         ]
         actual_serialized = self.field.serialize(value)
 

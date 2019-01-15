@@ -65,18 +65,21 @@ class AnnotationArrayField(ArrayField):
 
     def serialize(self, annotations):
         if not annotations:
-            annotations = []
+            return super(AnnotationArrayField, self).serialize([])
 
+        notes = []
         for annotation in annotations:
+            if isinstance(annotation, str) and not isinstance(annotation, Annotation):
+                annotation = Annotation(annotation)
             if not annotation.entry:
                 annotation.entry = datetime.now().replace(tzinfo=tzutc()).strftime(DATE_FORMAT)
-
+            notes.append(annotation)
         return super(AnnotationArrayField, self).serialize(
             [
                 {
-                    'entry': annotation.entry.strftime(DATE_FORMAT),
-                    'description': six.text_type(annotation)
-                } for annotation in annotations
+                    'entry': note.entry.strftime(DATE_FORMAT),
+                    'description': six.text_type(note)
+                } for note in notes
             ]
 
         )
