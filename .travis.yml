@@ -7,20 +7,28 @@ python:
   - "3.5"
   - "3.6"
 env:
-  - TASKWARRIOR=v2.5.0
-  - TASKWARRIOR=v2.5.1
+  global:
+    - PIPENV_VERBOSITY=-1
+    - PYTHON_PIP_VERSION=18.1
+    - PYTHON_PIPENV_VERSION=2018.11.26
+  matrix:
+    - TASKWARRIOR_VERSION=v2.5.0
+    - TASKWARRIOR_VERSION=v2.5.1
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y python-dev cmake build-essential libgnutls28-dev uuid-dev gnutls-bin chrpath libssl-dev libfontconfig1-dev
+  - pip install pip==$PYTHON_PIP_VERSION
+  - pip install pipenv==$PYTHON_PIPENV_VERSION
   - git clone https://github.com/GothenburgBitFactory/taskwarrior.git
   - cd taskwarrior
-  - git checkout $TASKWARRIOR
+  - git checkout $TASKWARRIOR_VERSION
   - cmake .
   - make
   - sudo make install
   - task --version
   - cd ../
-install: python setup.py install
+install:
+  - pipenv install --deploy --dev
 script: python setup.py test
 notifications:
   email: true
