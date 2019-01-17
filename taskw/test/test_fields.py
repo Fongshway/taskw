@@ -32,6 +32,8 @@ class TestAnnotationArrayField(TestCase):
         self.assertEqual(actual_serialized[0]['entry'], "20240101T010101Z")
         self.assertEqual(actual_serialized[1]['description'], "something else")
         self.assertIsNotNone(actual_serialized[1]['entry'])
+        self.assertEqual(actual_serialized[2]['description'], "String Annotation")
+        self.assertIsNotNone(actual_serialized[2]['entry'])
 
         for annotation in actual_serialized:
             self.assertTrue(
